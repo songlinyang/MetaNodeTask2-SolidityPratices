@@ -246,21 +246,117 @@ pragma solidity >=0.8.2 <0.9.0;
 //     }
 // }
 
+//回顾EVM特性章节： https://github.com/MetaNodeAcademy/Base2-Solidity/blob/main/1-solidity-base/1.2%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/03.EVM%E7%89%B9%E6%80%A7.md
 
-contract UserRegistry {
-    struct User {
-        string name;
-        uint256 age;
-        bool isRegistered;
-    }
-    mapping(address => User) public users;
-    function registerUser(string memory name, uint256 age) public {
-        require(!users[msg.sender].isRegistered, "User already registered");
-        users[msg.sender] = User(name, age, true);
-    }
-    function getUser(address user) public view returns (string memory, uint256, bool) {
-        require(users[user].isRegistered, "User not registered");
-        User memory u = users[user];
-        return (u.name, u.age, u.isRegistered);
+// 在 Solidity 中，直接存储在栈（Stack）中的基本类型包括，同时消耗的gas最少
+// contract StackTypes {
+//     function integerTypes() public pure{
+//         //所有整型都存在于stack
+//         uint256 a = 1;
+//         uint8 b =2;
+//         int256 c= -1;
+//         int8 d = -2;
+//     }
+//     function viewIntergerTypes() public view returns (uint256,uint8,int256,int8) {
+//         uint256 a = 1;
+//         uint8 b =2;
+//         int256 c= -1;
+//         int8 d = -2;
+//         return(a,b,c,d);
+//     }
+//     //地址（Address）
+//     function addressTypes() public view returns(address, address payable ){
+//     address addr = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;
+//     address payable payableAddr = payable(0x5B38Da6a701c568545dCfcB03FcB875f56beddC4);
+//     return(addr,payableAddr);
+//     }
+//     //固定大小字节数组（Fixed-size Bytes）
+//     function bytesTypes() public pure {
+//         bytes1 b1 = 0x12;
+//         // bytes32 b32 = 0x123;
+//     }
+//     //枚举（Enum）
+//     enum Status { Active, Inactive }
+//     uint a = 0;
+//     function enumTypes  () public pure {
+//         //使用pure仍能使用编译时就被解析为固定值的变量，如枚举
+//         //         枚举值是编译时常量：Status.Active 是枚举类型的一个成员，它在编译时就被解析为一个固定的值（通常是 uint8 类型的 0）。这意味着访问 Status.Active 并不涉及读取合约存储（状态变量），而是直接使用编译时已知的常量值。
+
+//         // 局部变量存储在栈上：在函数内部声明的局部变量（如 status）存储在栈（stack）上，而不是合约存储（storage）中。操作栈上的变量不会影响合约状态，也不会读取状态，因此这并不违反 pure 函数的规则。
+
+//         // 纯函数的允许操作：pure 函数允许使用编译时常量、执行内部计算、定义局部变量以及使用函数参数。这些操作都不需要访问存储。
+//         Status status = Status.Active;  // 实际存储为 uint8
+//         // uint b = a;
+//     }
+
+//     enum Animal {Duck,Pig,Dog}
+//     function choiceAnimalTypes () public pure {
+//         Animal animal1 = Animal.Duck;
+//         Animal animal2 = Animal.Dog;
+//         Animal animal3 = Animal.Pig;
+
+//     }
+// }
+
+
+// contract StringExample {
+//     // Storage 字符串
+//     string public storageStr = "hello";  // 存储在链上
+    
+//     function example() public pure {
+//         // Memory 字符串
+//         string memory memoryStr = "world";
+        
+//         // 栈中存储字符串的引用
+//         // 实际字符串数据在 Memory 或 Storage
+//     }
+// }
+
+
+// contract MappingExample {
+//     // 只能声明为 Storage
+//     mapping(address => uint) public balances112312;
+    
+//     function example() public {
+//         // ❌ 不能创建 Memory 映射
+//         // mapping(address => uint) memory memoryMap;  // 错误
+//         balances112312[msg.sender] = 100;
+//         // 只能在 Storage 中使用
+//         // balances[msg.sender] = 100;
+//     }
+// }
+contract dynamicContract{
+    // 引用类型示例
+    bytes public dynamicBytes;     // 动态字节数组，存储在存储区(storage)
+    bytes public dynamicBytes1;     // 动态字节数组，存储在存储区(storage)
+
+    bytes32 public fixedBytes;     // 固定长度字节数组，是值类型
+
+    function example() public {
+        // 动态分配内存
+        dynamicBytes = new bytes(2);
+        dynamicBytes1 = new bytes(2);
+        dynamicBytes1.push(0x12);
+                dynamicBytes1.push(0x12);
+
+        dynamicBytes1.push(0x12);
+
+        dynamicBytes1.push(0x12);
+
+        dynamicBytes1.push(0x12);
+
+        dynamicBytes1.push(0x12);
+
+        dynamicBytes1.push(0x12);
+
+        dynamicBytes1.push(0x12);
+
+        dynamicBytes1.push(0x12);
+
+        dynamicBytes[0] = 0x12;
+        dynamicBytes[1] = 0x34;
+        
+        // 可以改变长度
+        dynamicBytes.push(0x56);
     }
 }
