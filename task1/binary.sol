@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// 二分查找
 pragma solidity ^0.8.0;
 
 contract BinaryContract {
