@@ -20,13 +20,19 @@ contract Ownable {
 
 
 contract MyToken is ERC20, ERC20Permit,Ownable {
-    
+
+    //定义授权结构体
+    struct ApprovalMsg {
+        address spender;
+        uint256 value;
+    }
     mapping (address=> uint256 balance) public balancesAmount;
-    mapping (address=> uint256 approveAmount) public approveMsg;
+    mapping (address=> ApprovalMsg[]) public userApprovals; //存储每次的授权结果
+    mapping(address => mapping(address => uint)) public approvalIndex; //查找已经授权的信息，找到特定spender的授权信息索引
     //Approval 事件
-    event ApprovalEvent(address indexed _owner, address indexed _spender, uint256 _value);
+    event ApprovalEvent(address  _owner, address  _spender, uint256 _value);
      //Transfer 事件
-    event TransferEvent(address indexed _from, address indexed _to, uint256 _value);
+    event TransferEvent(address  _from, address  _to, uint256 _value);
     // receiver 事件
     event receiverEvent(address sender,uint amount);
     // fallback 事件
@@ -41,29 +47,51 @@ contract MyToken is ERC20, ERC20Permit,Ownable {
     fallback() external payable { 
         emit fallbackEvent(msg.sender, msg.value, msg.data);
     }
-    // 查看账户余额
-    function getBalances(address account) external returns(uint256){
-        balancesAmount[account] = balanceOf(account);
-        return balancesAmount[account];
+    function setBalances() external {
+        balancesAmount[msg.sender] = balanceOf(msg.sender);
     }
-    function transfer(address to,uint256 value) public override returns(bool){
+    // 查看账户余额
+    function getBalances() external view returns(uint256){
+         return balancesAmount[msg.sender];
+    }
+    function transferMTK(address to,uint256 value) public returns(bool){
         //发起转账交易
         require(value>0,"token can not be less 0!");
+        transfer(to, value);
         emit TransferEvent(msg.sender,to,value);
         return true;
 
     }
-    //approve 允许 _spender 从您的账户多次提款，最高金额为 _value
-    function approve(address _spender, uint256 _value) public override onlyOwner returns(bool) {
+    //approve 允许 _spender 从您的账户多次提款，被授权的代币数量为 _value
+    function approveMTK(address _spender, uint256 _value) external  returns(bool) {
         require(_spender !=address(0),"spender account is err!");
         require(_value>0,"token can not be less 0!");
-        approveMsg[_spender] = _value;
+        //调用父合约ERC20的限额授权approve方法
+        approve(_spender, _value);
+        //检查是否已经存在对该spender的授权
+        uint index = approvalIndex[msg.sender][_spender];
+        if (index>0){
+            // 已有授权，更新授权限额信息
+            userApprovals[msg.sender][index-1].value = _value;
+        }else{
+            //创建新授权
+            userApprovals[msg.sender].push(ApprovalMsg(_spender,_value));
+            //更新索引映射
+            approvalIndex[msg.sender][_spender] = userApprovals[msg.sender].length;
+        }
         emit ApprovalEvent(msg.sender,_spender,_value);
         return true;
     }
+    //获取特定的spender授权信息
+    function getApproveMTKForSpender(address _spender) external view  returns (uint256 value){
+        uint256 index = approvalIndex[msg.sender][_spender];
+        ApprovalMsg memory approvalObj = userApprovals[msg.sender][index-1];
+        return approvalObj.value;
+    }
     //6.提供mint函数，允许合约发所有者增发代币
-    function mint(address account,uint256 tokenCount) external onlyOwner {
-        require(tokenCount>0,"token can not be less 0!");
-        _mint(msg.sender, tokenCount*10**decimals());
+    function mint(address account,uint256 tokenAmount) external onlyOwner {
+
+        require(tokenAmount>0,"token can not be less 0!");
+        _mint(msg.sender, tokenAmount);
     }
 }
