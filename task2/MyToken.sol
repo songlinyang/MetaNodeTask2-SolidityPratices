@@ -27,10 +27,20 @@ contract MyToken is ERC20, ERC20Permit,Ownable {
     event ApprovalEvent(address indexed _owner, address indexed _spender, uint256 _value);
      //Transfer 事件
     event TransferEvent(address indexed _from, address indexed _to, uint256 _value);
-
+    // receiver 事件
+    event receiverEvent(address sender,uint amount);
+    // fallback 事件
+    event  fallbackEvent(address sender,uint amount,bytes data);
     constructor () ERC20("MyToken","MTK") ERC20Permit("MyToken"){}
 
-
+    // 允许转账
+    receive() external payable { 
+        emit receiverEvent(msg.sender,msg.value);
+    }
+    // 进行兜底处理
+    fallback() external payable { 
+        emit fallbackEvent(msg.sender, msg.value, msg.data);
+    }
     // 查看账户余额
     function getBalances(address account) external returns(uint256){
         balancesAmount[account] = balanceOf(account);
@@ -54,7 +64,6 @@ contract MyToken is ERC20, ERC20Permit,Ownable {
     //6.提供mint函数，允许合约发所有者增发代币
     function mint(address account,uint256 tokenCount) external onlyOwner {
         require(tokenCount>0,"token can not be less 0!");
-        _mint(msg.sender, tokenCount);
+        _mint(msg.sender, tokenCount*10**decimals());
     }
 }
-
