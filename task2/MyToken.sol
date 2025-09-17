@@ -62,12 +62,13 @@ contract MyToken is ERC20, ERC20Permit,Ownable {
         return true;
 
     }
-    //approve 允许 _spender 从您的账户多次提款，被授权的代币数量为 _value
+    //approve 允许 _spender 从您的账户，被授权的代币总限额数量为 _value
     function approveMTK(address _spender, uint256 _value) external  returns(bool) {
         require(_spender !=address(0),"spender account is err!");
         require(_value>0,"token can not be less 0!");
         //调用父合约ERC20的限额授权approve方法
         approve(_spender, _value);
+        
         //检查是否已经存在对该spender的授权
         uint index = approvalIndex[msg.sender][_spender];
         if (index>0){
@@ -81,6 +82,14 @@ contract MyToken is ERC20, ERC20Permit,Ownable {
         }
         emit ApprovalEvent(msg.sender,_spender,_value);
         return true;
+    }
+    //transferFrom 允许 _from 从您的账户多次提款，被授权的代币数量为 _value，可以一笔一笔转账直到达到（approve）总共转账限额为止
+    function transferFromMTK(address from, address to, uint256 value) external returns(bool){
+        require(value>0,"token can not be less 0!");
+        transferFrom(from, to, value);
+        emit TransferEvent(from, to, value);
+        return true;
+
     }
     //获取特定的spender授权信息
     function getApproveMTKForSpender(address _spender) external view  returns (uint256 value){
