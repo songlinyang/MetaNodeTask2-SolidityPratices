@@ -53,7 +53,7 @@ contract BeggingContract is Ownable {
             uint256 amt = donationsMsg[dornors[i]];
             for(uint j=0;j<topCount;j++){
                 if(amt > topAmounts[j]){
-                    //插入排序
+                    //插入
                     for(uint k=topCount-1;k>j;k--){
                         topDonors[k] = topDonors[k-1];
                     }
